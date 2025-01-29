@@ -1,40 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-func main() {
-	rootDir := "./gno/examples/gno.land"
-	outputFile := "imports.json"
-
-	packages, err := findGnoPackages(rootDir)
-	if err != nil {
-		fmt.Printf("Error finding Gno packages: %v\n", err)
-		return
-	}
-
-	output := make(map[string]map[string]interface{})
-	for pkg, imports := range packages {
-		output[pkg] = map[string]interface{}{
-			"imports": imports,
-			"creator": "monorepo",
-		}
-	}
-
-	err = saveToJSON(output, outputFile)
-	if err != nil {
-		fmt.Printf("Error saving to JSON: %v\n", err)
-		return
-	}
-
-	fmt.Printf("Data successfully saved to %s\n", outputFile)
-}
 
 func findGnoPackages(root string) (map[string][]string, error) {
 	packages := make(map[string][]string)
@@ -71,7 +42,7 @@ func findGnoPackages(root string) (map[string][]string, error) {
 				return err
 			}
 
-			relPath := strings.TrimPrefix(path, "gno/examples/gno.land/")
+			relPath := strings.TrimPrefix(path, root)
 			packages[relPath] = imports
 		}
 		return nil
@@ -147,16 +118,4 @@ func parseImports(content string) []string {
 		}
 	}
 	return imports
-}
-
-func saveToJSON(data map[string]map[string]interface{}, outputPath string) error {
-	file, err := os.Create(outputPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(data)
 }
